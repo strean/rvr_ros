@@ -27,11 +27,9 @@
 #include "SystemInfo.h"
 
 
-double width = 0.1;
+double width = 1;
 double ticks_per_meter = 100;
 
-double vl = 0.0;
-double vr = 0.0;
 double enc_l = 0.0;
 double enc_r = 0.0;
 double enc_l_old = 0.0;
@@ -59,32 +57,37 @@ mys::TraceStart tout { std::cout };
 
 
 
-void cmd_vel_callback(const geometry_msgs::Twist &twist_aux)
+void cmd_vel_callback(const geometry_msgs::Twist &twist)
 {
-	//ROS_INFO_STREAM("rvr_ros/base_controller: cmd_vel_callback");
+	ROS_INFO_STREAM("rvr_ros/base_controller: cmd_vel_callback");
 
-	geometry_msgs::Twist twist = twist_aux;
-	double v_x = twist_aux.linear.x;
-	double v_th = twist_aux.angular.z;
-	double l = 0.0;
+	double v_x = twist.linear.x;
+	double v_th = twist.angular.z;
+
+	ROS_INFO_STREAM(" Twist.linear.x: " << twist.linear.x << ", Twist.angular.z: " << twist.angular.z);
+
 	double r = 0.0;
+	double l = 0.0;
 
 	rvr::Drive drive(bb, rvr_out);
 
-	if ( v_x == 0 ) {
+	if ( v_th == 0 ) {
+		r = l = v_x;
+	} else if ( v_x == 0 ) {
 		r = v_th * width / 2.0;
-		l = (-1) * vr;
-	} else if ( v_th == 0 ) {
-		l = r = v_x;
+		l = -r;
 	} else {
-		l = v_x - v_th * width / 2.0;
-		r = v_x + v_th * width / 2.0;
+		r = v_x + ( v_th * width / 2.0 );
+		l = v_x - ( v_th * width / 2.0 );
 	}
-	vl = l * 50; // 255.99;
-	vr = r * 50; // 255.99;
 
-	drive.drive(vl, vr);
-	
+	r *= 50;
+	l *= 50;
+
+	ROS_INFO_STREAM(" vl = " << l << ", vr = " << r);
+
+	drive.drive(l, r);
+
 }
 
 int main(int argc, char** argv)
@@ -163,7 +166,7 @@ int main(int argc, char** argv)
 
 
 		rvr::VelocityData v { sensors_s.velocity().value_or(rvr::VelocityData { }) };
-		terr << code_loc << "Velocity: " << v.x << mys::sp << v.y;
+		// terr << code_loc << "Velocity: " << v.x << mys::sp << v.y;
 
 
 
@@ -186,4 +189,3 @@ int main(int argc, char** argv)
 
 	return 0;
 }
-
