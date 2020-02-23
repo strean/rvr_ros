@@ -61,11 +61,14 @@ mys::TraceStart tout { std::cout };
 
 void cmd_vel_callback(const geometry_msgs::Twist &twist_aux)
 {
-	//ROS_INFO_STREAM("rvr_ros/base_controller: cmd_vel_callback");
+	ROS_INFO_STREAM("rvr_ros/base_controller: cmd_vel_callback");
 
 	geometry_msgs::Twist twist = twist_aux;
 	double v_x = twist_aux.linear.x;
 	double v_th = twist_aux.angular.z;
+
+	ROS_INFO_STREAM(" Twist.linear.x: " << twist_aux.linear.x << " , Twist.angular.z: " << twist_aux.angular.z );
+
 	double l = 0.0;
 	double r = 0.0;
 
