@@ -1,0 +1,4 @@
+<launch>
+  <node name="base_controller" pkg="rvr_ros" type="base_controller"/>
+
+</launch>

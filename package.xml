@@ -23,6 +23,7 @@
   <depend>rospy</depend>
   <depend>std_msgs</depend>
   <depend>serial</depend>
+  <depend>tf</depend>
   <!--   Note that this is equivalent to the following: -->
   <!--   <build_depend>roscpp</build_depend> -->
   <!--   <exec_depend>roscpp</exec_depend> -->

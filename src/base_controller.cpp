@@ -16,7 +16,6 @@
 #include "Trace.h"
 #include "Blackboard.h"
 #include "Response.h"
-
 #include "ApiShell.h"
 #include "Connection.h"
 #include "Drive.h"
@@ -36,14 +35,8 @@ double enc_l_old = 0.0;
 double end_r_old = 0.0;
 double dist_l = 0.0;
 double dist_r = 0.0;
-double x = 0.0;
-double y = 0.0;
-double th = 0.0;
 double dt = 0.0001;
 
-
-ros::Time last_time;
-geometry_msgs::Quaternion odom;
 
 // Much of the code below is from Rud Merriams's rvrExercise
 
@@ -96,11 +89,28 @@ int main(int argc, char** argv)
 	ROS_INFO_STREAM("rvr_ros/base_controller: init");
 
 	ros::init(argc, argv, "base_controller");
+
 	ros::NodeHandle n;
-
 	ros::Subscriber subscriber = n.subscribe("cmd_vel", 10, cmd_vel_callback);
+	ros::Publisher publisher = n.advertise<nav_msgs::Odometry>("odom", 20);
+	tf::TransformBroadcaster broadcaster;
 
-	ros::Rate rate(10);
+	double x = 0.0;
+	double y = 0.0;
+	double th = 0.0;
+
+	double vx = 0.0;
+	double vy = 0.0;
+	double vth = 0.0;
+
+	ros::Time time;
+	ros::Time time_last;
+
+	const double degrees = M_PI / 180;
+
+	geometry_msgs::TransformStamped odom_trans;
+	odom_trans.header.frame_id = "odom";
+	odom_trans.child_frame_id = "base_footprint";
 
 	// set up a thread to read responses
 	std::promise<void> end_tasks;
@@ -142,13 +152,16 @@ int main(int argc, char** argv)
 	sensors_s.clearStreaming();
 	std::this_thread::sleep_for(50ms);
 
-	sensors_s.streamSpeedVelocityLocator();
+	//sensors_s.streamSpeedVelocityLocator();
+	sensors_s.streamQuaternion();
 
 	constexpr uint16_t period { 50 };
 	sensors_s.enableStreaming(period);
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(period * 2));
 
+
+	ros::Rate loop_rate(20);
 
 	while( ros::ok() )
 	{
@@ -161,16 +174,24 @@ int main(int argc, char** argv)
 
 		ros::spinOnce();
 
-		dt = (now - last_time).toSec();
-		last_time = now;
+		dt = (now - time_last).toSec();
+		time_last = now;
 
 
-		rvr::VelocityData v { sensors_s.velocity().value_or(rvr::VelocityData { }) };
-		// terr << code_loc << "Velocity: " << v.x << mys::sp << v.y;
+		//rvr::VelocityData v { sensors_s.velocity().value_or(rvr::VelocityData { }) };
+		//ROS_INFO_STREAM(" velocity.x: " << v.x);
+
+		//auto l = sensors_s.locator();
+		// ROS_INFO_STREAM(" locator.x: " << l.x << ", locator.y: " << l.y);
+
+		rvr::QuatData q { sensors_s.quaternion().value_or( rvr::QuatData { } ) };
+		th = atan2( 2.0f * ( q.w * q.z + q.x * q.y ), 1.0f - 2.0f * ( q.y * q.y + q.z * q.z ) );
+
+		ROS_INFO_STREAM(" Theta: " << th);
 
 
 
-		rate.sleep();
+		loop_rate.sleep();
 	}
 
 	} catch (std::exception& e) {

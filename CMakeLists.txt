@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   message_generation
   serial
+  tf
 )
 
 ## System dependencies are found with CMake's conventions
@@ -123,6 +124,18 @@ FIND_LIBRARY(rvr++_LIBRARIES librvr++.a /home/michael/catkin_ws/src/rvr_ros/lib)
 add_executable(base_controller src/base_controller.cpp)
 target_link_libraries(base_controller ${rvr++_LIBRARIES} ${catkin_LIBRARIES})
 add_dependencies(base_controller rvr_hardware_interface_generate_messages_cpp)
+
+add_executable(tf_broadcaster src/tf_broadcaster.cpp)
+target_link_libraries(tf_broadcaster ${catkin_LIBRARIES})
+
+add_executable(tf_listener src/tf_listener.cpp)
+target_link_libraries(tf_listener ${catkin_LIBRARIES})
+
+add_executable(laser src/laser.cpp)
+target_link_libraries(laser ${catkin_LIBRARIES})
+
+#add_executable(odometry src/odometry.cpp)
+#target_link_libraries(odometry ${catkin_LIBRARIES})
 
 #############
 ## Install ##
